@@ -1,30 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const produitController = require('../controllers/produitController');
-const { authentifierUtilisateur, verifierRole } = require('../middlewares/authMiddlewares');
+const { authentifierUtilisateur, verifierRole } = require('../middleware/authMiddleware');
 
 // Ajouter un produit (réservé aux rôles spécifiques)
 router.post(
-  '/produits',
-  authentifierUtilisateur,
-  verifierRole(['Vendeur', 'Pharmacien', 'Admin']),
-  produitController.ajouterProduit
+    '/produits',
+    authentifierUtilisateur,
+    verifierRole(['Vendeur', 'Pharmacien', 'Admin']),
+    produitController.ajouterProduit
 );
 
 // Modifier un produit
 router.put(
-  '/produits/:id',
-  authentifierUtilisateur,
-  verifierRole(['Vendeur', 'Pharmacien', 'Admin']),
-  produitController.updateProduit
+    '/produits/:id',
+    authentifierUtilisateur,
+    verifierRole(['Vendeur', 'Pharmacien', 'Admin']),
+    produitController.updateProduit
 );
 
 // Supprimer un produit
 router.delete(
-  '/produits/:id',
-  authentifierUtilisateur,
-  verifierRole(['Vendeur', 'Pharmacien', 'Admin']),
-  produitController.deleteProduit
+    '/produits/:id',
+    authentifierUtilisateur,
+    verifierRole(['Vendeur', 'Pharmacien', 'Admin']),
+    produitController.deleteProduit
 );
 
 // Obtenir tous les produits (accessible à tous)
@@ -37,9 +37,7 @@ router.get('/produits/:id', produitController.getProduitById);
 // Recherche de produits par nom (accessible à tous)
 router.get('/produits/search/nom', produitController.searchProduitsByName);
 
-
+// Recherche de produits par localisation
+router.get('/produits/search/location', produitController.searchProduitsByLocation);
 
 module.exports = router;
-
-
-

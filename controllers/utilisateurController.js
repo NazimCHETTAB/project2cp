@@ -2,6 +2,7 @@ const Utilisateur = require('../models/utilisateur');
 const Produit = require('../models/produit');
 const Notification = require('../models/notification');
 const Message = require('../models/message');
+const Pharmacie = require('../models/pharmacie');
 
 // Fonctions existantes pour les utilisateurs normaux
 exports.obtenirProfil = async (req, res) => {
@@ -27,12 +28,8 @@ exports.obtenirProfilAutre = async (req, res) => {
 // Fonctions admin intégrées
 exports.gestionAdmin = {
 
-
-
-   
-
     // Pharmaciens
-obtenirNotifications: async (req, res) => {
+    obtenirNotifications: async (req, res) => {
         try {
             // Log pour débogage
             console.log("Récupération des notifications pour l'utilisateur:", req.user.id);
@@ -72,7 +69,7 @@ obtenirNotifications: async (req, res) => {
         }
     },
 
-validerPharmacien: async (req, res) => {
+    validerPharmacien: async (req, res) => {
         try {
             const pharmacien = await Utilisateur.findByIdAndUpdate(
                 req.params.id,
@@ -87,9 +84,7 @@ validerPharmacien: async (req, res) => {
     },
 
     // Messages signalés
-
-
-    traiterSignalement: async (req, res) =>{
+    traiterSignalement: async (req, res) => {
         try {
             const messageId = req.params.id;
             const { action } = req.body; // 'approuver' ou 'refuser'
@@ -136,7 +131,8 @@ validerPharmacien: async (req, res) => {
             });
         }
     },
-   obtenirNotifications: async (req, res) => {
+
+    obtenirNotifications: async (req, res) => {
         try {
             // Récupérer les notifications de l'utilisateur
             const notifications = await Notification.find({ 
@@ -198,6 +194,7 @@ exports.supprimerUtilisateur = async (req, res) => {
         res.status(500).json({ message: "Erreur serveur" });
     }
 };
+
 exports.signalerMessage = async (req, res) => {
     try {
         // Utiliser une raison par défaut, aucune donnée n'est requise
@@ -246,6 +243,47 @@ exports.signalerMessage = async (req, res) => {
         res.status(200).json({ 
             success: true,
             message: "Signalement envoyé."
+        });
+    }
+};
+
+// Obtenir les statistiques du tableau de bord admin
+exports.getAdminDashboardStats = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ message: "Accès non autorisé" });
+        }
+
+        // Récupérer toutes les statistiques
+        const stats = {
+            totalProduits: await Produit.countDocuments(),
+            totalUtilisateurs: await Utilisateur.countDocuments(),
+            totalPharmacies: await Pharmacie.countDocuments(),
+            utilisateursByRole: await Utilisateur.aggregate([
+                {
+                    $group: {
+                        _id: "$role",
+                        count: { $sum: 1 }
+                    }
+                }
+            ]),
+            pharmaciesByWilaya: await Pharmacie.aggregate([
+                {
+                    $group: {
+                        _id: "$wilaya",
+                        count: { $sum: 1 }
+                    }
+                }
+            ])
+        };
+
+        res.status(200).json(stats);
+    } catch (error) {
+        console.error('Erreur:', error);
+        res.status(500).json({
+            message: "Erreur lors de la récupération des statistiques",
+            error: error.message
         });
     }
 };

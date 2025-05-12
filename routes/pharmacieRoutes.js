@@ -1,16 +1,17 @@
 const express = require('express');
 const {
-  ajouterPharmacie,
-  getAllPharmacies,
-  getPharmacieById,
-  rechercherPharmacieParNom,
-  modifierPharmacie,
-  supprimerPharmacie,
-  findNearbyPharmacies // Ajout de la nouvelle fonction
+    ajouterPharmacie,
+    getAllPharmacies,
+    getPharmacieById,
+    rechercherPharmacieParNom,
+    modifierPharmacie,
+    supprimerPharmacie,
+    findNearbyPharmacies,
+    rechercherPharmaciesAvancee // Ajout de la nouvelle fonction
 } = require('../controllers/pharmacieController');
 
 // Modification ici - utiliser les bons noms de middlewares
-const { authentifierUtilisateur, verifierRole } = require('../middlewares/authMiddlewares');
+const { authentifierUtilisateur, verifierRole } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -26,6 +27,9 @@ router.get('/recherche', rechercherPharmacieParNom);
 
 // Nouvelle route: Trouver les pharmacies à proximité
 router.get('/nearby', findNearbyPharmacies);
+
+// Route pour la recherche avancée des pharmacies
+router.get('/recherche/avancee', rechercherPharmaciesAvancee);
 
 // Obtenir une pharmacie par son ID
 router.get('/:id', getPharmacieById);

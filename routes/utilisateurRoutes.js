@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/utilisateurController');
-const { authentifierUtilisateur, verifierRole } = require('../middlewares/authMiddlewares');
+const { authentifierUtilisateur, verifierRole } = require('../middleware/authMiddleware');
 
 // Routes publiques
 router.get('/:id', controller.obtenirProfilAutre);
@@ -35,6 +35,7 @@ router.put('/admin/notifications/:id/lue', verifierRole(['Admin']), (req, res, n
     controller.gestionAdmin.marquerNotificationLue(req, res).catch(next);
 });
 
-
+// Route pour obtenir les statistiques du tableau de bord admin
+router.get('/admin/dashboard-stats', authentifierUtilisateur, verifierRole(['Admin']), controller.getAdminDashboardStats);
 
 module.exports = router;
