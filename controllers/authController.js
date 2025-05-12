@@ -21,20 +21,11 @@ exports.inscrirePharmacien = async(req, res) => {
             motDePasse,
             telephone,
             nomPharmacie,
+            licence,
             photoProfil,
             localisation,
             tempsDeTravail
         } = req.body;
-        
-        // Vérifier le fichier de licence
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: "Le fichier de licence (PDF) est obligatoire"
-            });
-        }
-        
-        const licence = req.file.path; // Chemin du fichier uploadé
 
         if (!email || !motDePasse || !telephone || !nomPharmacie || !licence || !localisation) {
             return res.status(400).json({

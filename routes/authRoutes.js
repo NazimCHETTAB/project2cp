@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { uploadCertificate } = require('../middleware/uploadMiddleware');
 
 // 1. Choix du rôle
 router.get('/choisir-role', authController.choisirRole);
 
 // 2. Inscriptions
-router.post('/inscription/pharmacien', uploadCertificate, authController.inscrirePharmacien);
+router.post('/inscription/pharmacien', authController.inscrirePharmacien);
 router.post('/inscription/vendeur', authController.inscrireVendeur);
 // Dans authRoutes.js
 router.post('/inscription/admin', authController.inscrireAdmin);
