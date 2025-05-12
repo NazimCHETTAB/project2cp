@@ -9,6 +9,7 @@ exports.authentifierUtilisateur = (req, res, next) => {
         return res.status(401).json({ message: "Token manquant" });
     }
 
+
     jwt.verify(token, process.env.JWT_SECRET, async(err, decoded) => {
         if (err) {
             return res.status(401).json({ message: "Token invalide" });
