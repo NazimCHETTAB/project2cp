@@ -365,10 +365,10 @@ exports.rechercherPharmaciesAvancee = async(req, res) => {
 
             // Récupérer les produits pour chaque pharmacie
             const pharmaciesCompletes = await Promise.all(
-                pharmaciesAvecDistance.map(async (pharmacie) => {
+                pharmaciesAvecDistance.map(async(pharmacie) => {
                     const produits = await Produit.find({ pharmacie: pharmacie._id })
                         .select('nom prix photo');
-                    return { ...pharmacie, produits };
+                    return {...pharmacie, produits };
                 })
             );
 
@@ -380,11 +380,11 @@ exports.rechercherPharmaciesAvancee = async(req, res) => {
 
         // Si pas de coordonnées, retourner les pharmacies sans distance
         const pharmaciesAvecProduits = await Promise.all(
-            pharmacies.map(async (pharmacie) => {
+            pharmacies.map(async(pharmacie) => {
                 const pharmObj = pharmacie.toObject();
                 const produits = await Produit.find({ pharmacie: pharmacie._id })
                     .select('nom prix photo');
-                return { ...pharmObj, produits };
+                return {...pharmObj, produits };
             })
         );
 

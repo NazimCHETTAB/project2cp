@@ -5,7 +5,7 @@ const Message = require('../models/message');
 const Pharmacie = require('../models/pharmacie');
 
 // Fonctions existantes pour les utilisateurs normaux
-exports.obtenirProfil = async (req, res) => {
+exports.obtenirProfil = async(req, res) => {
     try {
         const utilisateur = await Utilisateur.findById(req.user.id).select("-motDePasse");
         if (!utilisateur) return res.status(404).json({ message: "Utilisateur non trouvé" });
@@ -15,7 +15,7 @@ exports.obtenirProfil = async (req, res) => {
     }
 };
 
-exports.obtenirProfilAutre = async (req, res) => {
+exports.obtenirProfilAutre = async(req, res) => {
     try {
         const utilisateur = await Utilisateur.findById(req.params.id).select("-motDePasse");
         if (!utilisateur) return res.status(404).json({ message: "Utilisateur non trouvé" });
@@ -29,52 +29,50 @@ exports.obtenirProfilAutre = async (req, res) => {
 exports.gestionAdmin = {
 
     // Pharmaciens
-    obtenirNotifications: async (req, res) => {
+    obtenirNotifications: async(req, res) => {
         try {
             // Log pour débogage
             console.log("Récupération des notifications pour l'utilisateur:", req.user.id);
-            
+
             // Requête plus générale pour voir toutes les notifications
-            const toutesNotifications = await Notification.find({ 
+            const toutesNotifications = await Notification.find({
                 utilisateur: req.user.id
             });
-            
+
             console.log("Toutes les notifications (incluant lues):", toutesNotifications.length);
             console.log("Types de toutes les notifications:", toutesNotifications.map(n => n.type));
-            
+
             // Récupérer les notifications non lues
-            const notifications = await Notification.find({ 
-                utilisateur: req.user.id,
-                lu: false
-            })
-            .sort('-dateCreation')
-            .populate('produit', 'nom')
-            .populate('pharmacien', 'email nomPharmacie licence')
-            .populate('message', 'contenu')
-            .populate('signalePar', 'email username');
-            
+            const notifications = await Notification.find({
+                    utilisateur: req.user.id,
+                    lu: false
+                })
+                .sort('-dateCreation')
+                .populate('produit', 'nom')
+                .populate('pharmacien', 'email nomPharmacie licence')
+                .populate('message', 'contenu')
+                .populate('signalePar', 'email username');
+
             console.log("Notifications non lues:", notifications.length);
             console.log("Types de notifications non lues:", notifications.map(n => n.type));
-            
+
             // Pour débogage seulement, afficher toutes les notifications
             console.log("Détails des notifications:", JSON.stringify(notifications, null, 2));
-            
+
             res.json(notifications);
         } catch (error) {
             console.error("Erreur complète lors de la récupération des notifications:", error);
-            res.status(500).json({ 
-                message: "Erreur serveur", 
-                error: error.toString() 
+            res.status(500).json({
+                message: "Erreur serveur",
+                error: error.toString()
             });
         }
     },
 
-    validerPharmacien: async (req, res) => {
+    validerPharmacien: async(req, res) => {
         try {
             const pharmacien = await Utilisateur.findByIdAndUpdate(
-                req.params.id,
-                { compteValide: true },
-                { new: true }
+                req.params.id, { compteValide: true }, { new: true }
             ).select('-motDePasse');
             if (!pharmacien) return res.status(404).json({ message: "Pharmacien non trouvé" });
             res.json({ message: "Pharmacien validé", pharmacien });
@@ -84,83 +82,77 @@ exports.gestionAdmin = {
     },
 
     // Messages signalés
-    traiterSignalement: async (req, res) => {
+    traiterSignalement: async(req, res) => {
         try {
             const messageId = req.params.id;
             const { action } = req.body; // 'approuver' ou 'refuser'
-            
+
             // Vérifier si l'utilisateur est admin
             if (!req.user || req.user.role !== 'Admin') {
                 return res.status(403).json({ message: "Accès interdit. Seuls les administrateurs peuvent traiter les signalements." });
             }
-            
+
             const message = await Message.findById(messageId);
             if (!message) {
                 return res.status(404).json({ message: "Message non trouvé" });
             }
-            
+
             // Mettre à jour le statut du message selon l'action
             if (action === 'approuver') {
                 // Si approuvé, supprimer ou masquer le message (selon votre logique)
-                await Message.findByIdAndUpdate(messageId, { 
+                await Message.findByIdAndUpdate(messageId, {
                     estSignale: false,
-                    supprime: true  // Ajoutez ce champ à votre modèle Message si nécessaire
+                    supprime: true // Ajoutez ce champ à votre modèle Message si nécessaire
                 });
             } else {
                 // Si refusé, simplement marquer comme non signalé
                 await Message.findByIdAndUpdate(messageId, { estSignale: false });
             }
-            
+
             // Mettre à jour toutes les notifications liées à ce message
-            await Notification.updateMany(
-                { message: messageId, type: 'signalement_message' },
-                { 
-                    status: action === 'approuver' ? 'approuvé' : 'refusé',
-                    lu: true
-                }
-            );
-            
-            res.status(200).json({ 
+            await Notification.updateMany({ message: messageId, type: 'signalement_message' }, {
+                status: action === 'approuver' ? 'approuvé' : 'refusé',
+                lu: true
+            });
+
+            res.status(200).json({
                 message: `Signalement ${action === 'approuver' ? 'approuvé' : 'refusé'} avec succès.`
             });
         } catch (error) {
             console.error('Erreur:', error);
-            res.status(500).json({ 
+            res.status(500).json({
                 message: "Erreur lors du traitement du signalement.",
                 error: error.toString()
             });
         }
     },
 
-    obtenirNotifications: async (req, res) => {
+    obtenirNotifications: async(req, res) => {
         try {
             // Récupérer les notifications de l'utilisateur
-            const notifications = await Notification.find({ 
-                utilisateur: req.user.id,
-                lu: false
-            })
-            .sort('-dateCreation')
-            .populate('produit', 'nom')
-            .populate('pharmacien', 'email nomPharmacie licence') // Ajout de cette ligne
-            .populate('message', 'contenu')
-            .populate('signalePar', 'email username');
-            
+            const notifications = await Notification.find({
+                    utilisateur: req.user.id,
+                    lu: false
+                })
+                .sort('-dateCreation')
+                .populate('produit', 'nom')
+                .populate('pharmacien', 'email nomPharmacie licence') // Ajout de cette ligne
+                .populate('message', 'contenu')
+                .populate('signalePar', 'email username');
+
             res.json(notifications);
         } catch (error) {
             res.status(500).json({ message: "Erreur serveur", error });
         }
     },
-    
+
     // Marquer une notification comme lue
-    marquerNotificationLue: async (req, res) => {
+    marquerNotificationLue: async(req, res) => {
         try {
             const { id } = req.params;
-            
-            await Notification.findOneAndUpdate(
-                { _id: id, utilisateur: req.user.id },
-                { lu: true }
-            );
-            
+
+            await Notification.findOneAndUpdate({ _id: id, utilisateur: req.user.id }, { lu: true });
+
             res.json({ message: "Notification marquée comme lue" });
         } catch (error) {
             res.status(500).json({ message: "Erreur serveur", error });
@@ -169,12 +161,11 @@ exports.gestionAdmin = {
 };
 
 // Fonctions existantes de mise à jour/suppression
-exports.mettreAJourUtilisateur = async (req, res) => {
+exports.mettreAJourUtilisateur = async(req, res) => {
     try {
         const utilisateur = await Utilisateur.findByIdAndUpdate(
             req.user.id,
-            req.body,
-            { new: true }
+            req.body, { new: true }
         ).select('-motDePasse');
         if (!utilisateur) return res.status(404).json({ message: "Utilisateur non trouvé" });
         res.json({ message: "Profil mis à jour", utilisateur });
@@ -183,7 +174,7 @@ exports.mettreAJourUtilisateur = async (req, res) => {
     }
 };
 
-exports.supprimerUtilisateur = async (req, res) => {
+exports.supprimerUtilisateur = async(req, res) => {
     try {
         if (req.user.role !== 'Admin' && req.user.id !== req.params.id) {
             return res.status(403).json({ message: "Action non autorisée" });
@@ -195,26 +186,26 @@ exports.supprimerUtilisateur = async (req, res) => {
     }
 };
 
-exports.signalerMessage = async (req, res) => {
+exports.signalerMessage = async(req, res) => {
     try {
         // Utiliser une raison par défaut, aucune donnée n'est requise
         const raison = "Contenu inapproprié";
         const description = req.body.description || "Signalement automatique";
         const email = req.body.email || "Anonyme";
-        
+
         // Récupérer tous les administrateurs
         const admins = await Utilisateur.find({ role: 'Admin' });
-        
+
         if (admins.length === 0) {
             console.log("Aucun administrateur trouvé pour envoyer les notifications");
-            return res.status(200).json({ 
+            return res.status(200).json({
                 success: true,
-                message: "Signalement enregistré." 
+                message: "Signalement enregistré."
             });
         }
-        
+
         console.log(`Envoi de notifications à ${admins.length} administrateurs`);
-        
+
         // Créer une notification pour chaque administrateur
         for (const admin of admins) {
             const notification = new Notification({
@@ -227,20 +218,20 @@ exports.signalerMessage = async (req, res) => {
                 dateCreation: new Date(),
                 lu: false // S'assurer que la notification n'est pas marquée comme lue
             });
-            
+
             const savedNotif = await notification.save();
             console.log(`Notification de signalement créée pour admin ${admin._id}, ID: ${savedNotif._id}`);
         }
-        
+
         // Message simplifié
-        res.status(200).json({ 
+        res.status(200).json({
             success: true,
             message: "Signalement envoyé."
         });
     } catch (error) {
         console.error('Erreur complète lors du signalement:', error);
         // Message d'erreur simplifié, mais nous loggons l'erreur complète pour débogage
-        res.status(200).json({ 
+        res.status(200).json({
             success: true,
             message: "Signalement envoyé."
         });
@@ -248,7 +239,7 @@ exports.signalerMessage = async (req, res) => {
 };
 
 // Obtenir les statistiques du tableau de bord admin
-exports.getAdminDashboardStats = async (req, res) => {
+exports.getAdminDashboardStats = async(req, res) => {
     try {
         // Vérifier que l'utilisateur est admin
         if (req.user.role !== 'Admin') {
@@ -260,22 +251,18 @@ exports.getAdminDashboardStats = async (req, res) => {
             totalProduits: await Produit.countDocuments(),
             totalUtilisateurs: await Utilisateur.countDocuments(),
             totalPharmacies: await Pharmacie.countDocuments(),
-            utilisateursByRole: await Utilisateur.aggregate([
-                {
-                    $group: {
-                        _id: "$role",
-                        count: { $sum: 1 }
-                    }
+            utilisateursByRole: await Utilisateur.aggregate([{
+                $group: {
+                    _id: "$role",
+                    count: { $sum: 1 }
                 }
-            ]),
-            pharmaciesByWilaya: await Pharmacie.aggregate([
-                {
-                    $group: {
-                        _id: "$wilaya",
-                        count: { $sum: 1 }
-                    }
+            }]),
+            pharmaciesByWilaya: await Pharmacie.aggregate([{
+                $group: {
+                    _id: "$wilaya",
+                    count: { $sum: 1 }
                 }
-            ])
+            }])
         };
 
         res.status(200).json(stats);

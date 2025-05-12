@@ -43,10 +43,10 @@ const upload = multer({
 });
 
 // Ajouter un produit avec support de téléchargement d'image
-exports.ajouterProduit = async (req, res) => {
+exports.ajouterProduit = async(req, res) => {
     try {
         const { nom, description, prix } = req.body;
-        
+
         // Vérifier si l'utilisateur est connecté et autorisé
         if (!req.user) {
             return res.status(401).json({ message: "Non autorisé" });
@@ -291,9 +291,7 @@ exports.searchProduitsByName = async(req, res) => {
             query.nom = parsedOptions.caseSensitive ? nom : new RegExp(`^${nom}$`, 'i');
         } else {
             // Correspondance partielle (contient)
-            query.nom = parsedOptions.caseSensitive ?
-                { $regex: nom } :
-                { $regex: nom, $options: 'i' };
+            query.nom = parsedOptions.caseSensitive ? { $regex: nom } : { $regex: nom, $options: 'i' };
         }
 
         // Exécuter la requête
@@ -330,7 +328,7 @@ exports.searchProduitsByName = async(req, res) => {
     }
 };
 
-exports.searchProduitsByLocation = async (req, res) => {
+exports.searchProduitsByLocation = async(req, res) => {
     try {
         const { nom, lat, lon, rayon = 5 } = req.query;
 
@@ -344,7 +342,7 @@ exports.searchProduitsByLocation = async (req, res) => {
 
         // Recherche des produits avec le nom fourni
         const query = nom ? { nom: { $regex: nom, $options: 'i' } } : {};
-        
+
         const produits = await Produit.find(query)
             .populate('pharmacie')
             .populate('vendeur', 'nom nomPharmacie role telephone');
@@ -359,7 +357,7 @@ exports.searchProduitsByLocation = async (req, res) => {
                     produit.pharmacie.latitude,
                     produit.pharmacie.longitude
                 );
-                
+
                 const produitObj = produit.toObject();
                 produitObj.distance = Math.round(distance * 10) / 10;
                 return produitObj;
@@ -373,9 +371,9 @@ exports.searchProduitsByLocation = async (req, res) => {
         });
     } catch (error) {
         console.error('Erreur:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             message: "Erreur lors de la recherche des produits",
-            error: error.message 
+            error: error.message
         });
     }
 };
